@@ -2,6 +2,7 @@
 #include<string.h>
 #include<ctype.h>
 #include "cabeceras.h"
+#include<stdlib.h>
 
 #define LONGITUD_COMANDO 100
 
@@ -14,7 +15,7 @@ void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos);
 int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, 
               char *nombreantiguo, char *nombrenuevo);
 int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, 
-             EXT_DATOS *memdatos, char *nombre)
+             EXT_DATOS *memdatos, char *nombre);
 int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            char *nombre,  FILE *fich);
@@ -46,9 +47,11 @@ int main()
      FILE *fent;
      
      // Lectura del fichero completo de una sola vez
-     ...
      
      fent = fopen("particion.bin","r+b");
+     if(fent == NULL){
+        exit(0);
+     }
      fread(&datosfich, SIZE_BLOQUE, MAX_BLOQUES_PARTICION, fent);    
      
      
@@ -59,30 +62,29 @@ int main()
      memcpy(&memdatos,(EXT_DATOS *)&datosfich[4],MAX_BLOQUES_DATOS*SIZE_BLOQUE);
      
      // Buce de tratamiento de comandos
-     for (;;){
-		 do {
-		 printf (">> ");
-		 fflush(stdin);
-		 fgets(comando, LONGITUD_COMANDO, stdin);
-		 } while (ComprobarComando(comando,orden,argumento1,argumento2) !=0);
-	     if (strcmp(orden,"dir")==0) {
-            Directorio(&directorio,&ext_blq_inodos);
-            continue;
-            }
-         ...
+     //for (;;){
+//		 do {
+//		 printf (">> ");
+//		 fflush(stdin);
+//		 fgets(comando, LONGITUD_COMANDO, stdin);
+//		 } while (ComprobarComando(comando,orden,argumento1,argumento2) !=0);
+//	     if (strcmp(orden,"dir")==0) {
+//            Directorio(&directorio,&ext_blq_inodos);
+//            continue;
+//            }
          // Escritura de metadatos en comandos rename, remove, copy     
-         Grabarinodosydirectorio(&directorio,&ext_blq_inodos,fent);
-         GrabarByteMaps(&ext_bytemaps,fent);
-         GrabarSuperBloque(&ext_superblock,fent);
-         if (grabardatos)
-           GrabarDatos(&memdatos,fent);
-         grabardatos = 0;
+//         Grabarinodosydirectorio(&directorio,&ext_blq_inodos,fent);
+//         GrabarByteMaps(&ext_bytemaps,fent);
+//         GrabarSuperBloque(&ext_superblock,fent);
+//         if (grabardatos)
+//           GrabarDatos(&memdatos,fent);
+//         grabardatos = 0;
          //Si el comando es salir se habrán escrito todos los metadatos
          //faltan los datos y cerrar
-         if (strcmp(orden,"salir")==0){
-            GrabarDatos(&memdatos,fent);
-            fclose(fent);
-            return 0;
-         }
-     }
+//         if (strcmp(orden,"salir")==0){
+//            GrabarDatos(&memdatos,fent);
+//            fclose(fent);
+//            return 0;
+//         }
+//     }
 }
