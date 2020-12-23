@@ -144,3 +144,12 @@ int ComprobarComando(char *strcomando){
                 return 8;
         }
 }
+
+void LeeSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup){
+   printf("Bloque %d Bytes\n", psup.s_block_size);
+   printf("inodos particion = %d\n", psup.s_inodes_count);
+   printf("inodos libres = %d\n", psup.s_free_inodes_count);
+   printf("Bloques particion = %d\n", psup.s_blocks_count);
+   printf("Bloques libres = %d\n", psup.s_free_blocks_count);
+   printf("Primer bloque de datos = %d\n", psup.s_first_data_block);
+}
