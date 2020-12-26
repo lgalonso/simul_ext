@@ -160,6 +160,23 @@ void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos){
    //Comienza en el 1 porque en el 0 está la entrada especial '.' que no necesitamos mostrar
    for(int i=1; i<MAX_FICHEROS; i++){
       if(directorio[i].dir_nfich != "")
-         printf("%s /t tamanio: %d /t inodo: %d bloques: %d\n", directorio[i].dir_nfich, inodos.bql_inodos[directorio[i].dir_inodo].size_fichero, directorio[i].dir_inodo, inodos.bql_inodos[directorio[i].dir_inodo].i_nbloque)
+         printf("%s /t tamanio: %d /t inodo: %d bloques: %d\n", directorio[i].dir_nfich, inodos.bql_inodos[directorio[i].dir_inodo].size_fichero, directorio[i].dir_inodo, inodos.bql_inodos[directorio[i].dir_inodo].i_nbloque);
    }
+}
+
+//Esta función imprime los bytemaps
+void Printbytemaps(EXT_BYTE_MAPS *ext_bytemaps){
+        int i;
+        printf("Inodos:");
+        //i empieza en la posición 0 y llega hasta MAX_INODOS -1, va imprimiendo el
+        //número/carácter en cada posición con espacios.
+        for(i=0; i < MAX_INODOS; i++){
+                printf(" %c", ext_bytemaps->bmap_inodos[i]);
+        }
+        //Lo mismo que arriba pero con el bytemap de bloques.
+        printf("\nBloques:");
+        for(i=0; i < MAX_BLOQUES_PARTICION; i++){
+                printf(" %c", ext_bytemaps->bmap_bloques[i]);
+        }
+        printf("\n");
 }
