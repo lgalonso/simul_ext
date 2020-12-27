@@ -11,9 +11,8 @@ int ComprobarComando(char *strcomando);
 void LeeSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup);
 int BuscaFich(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, 
               char *nombre);
-void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos);
-int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, 
-              char *nombreantiguo, char *nombrenuevo);
+void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MAPS *ext_bytemaps);
+int Renombrar(EXT_ENTRADA_DIR *directorio,EXT_BYTE_MAPS *ext_bytemaps ,char *comando);
 int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, 
              EXT_DATOS *memdatos, char *nombre);
 int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
@@ -57,7 +56,7 @@ int main()
      if(fent == NULL){
         exit(0);
      }
-     fread(&datosfich, SIZE_BLOQUE, MAX_BLOQUES_PARTICION, fent);    
+     fread(&datosfich, SIZE_BLOQUE, MAX_BLOQUES_PARTICION, fent);
      
      //Inicializacion variables
      memcpy(&ext_superblock,(EXT_SIMPLE_SUPERBLOCK *)&datosfich[0], SIZE_BLOQUE);
@@ -65,7 +64,6 @@ int main()
      memcpy(&ext_bytemaps,(EXT_BLQ_INODOS *)&datosfich[1], SIZE_BLOQUE);
      memcpy(&ext_blq_inodos,(EXT_BLQ_INODOS *)&datosfich[2], SIZE_BLOQUE);
      memcpy(&memdatos,(EXT_DATOS *)&datosfich[4],MAX_BLOQUES_DATOS*SIZE_BLOQUE);
-
 
      do{
 	printf("\n>> ");
@@ -81,9 +79,10 @@ int main()
 			Printbytemaps(&ext_bytemaps);
 		break;
 		case 3: //dir
-			Directorio(directorio,&ext_blq_inodos);
+			Directorio(directorio,&ext_blq_inodos,&ext_bytemaps);
 		break;
 		case 4: //rename
+			Renombrar(directorio, &ext_bytemaps, comando);
 		break;
 		case 5: //imprimir
 		break;
@@ -159,10 +158,10 @@ void LeeSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup){
 }
 
 //REVIEW
-void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos){
+void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MAPS *ext_bytemaps){
    //Comienza en el 1 porque en el 0 está la entrada especial '.' que no necesitamos mostrar
    for(int i=1; i<MAX_FICHEROS; i++){
-      if(directorio[i].dir_inodo <= MAX_INODOS)
+      if(ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] == 1)
          printf("%s \t tamanio: %d \t inodo: %d bloques: %d\n", directorio[i].dir_nfich, inodos->blq_inodos[directorio[i].dir_inodo].size_fichero, directorio[i].dir_inodo, *(inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque));
    }
 }
@@ -174,12 +173,36 @@ void Printbytemaps(EXT_BYTE_MAPS *ext_bytemaps){
         //i empieza en la posición 0 y llega hasta MAX_INODOS -1, va imprimiendo el
         //número/carácter en cada posición con espacios.
         for(i=0; i < MAX_INODOS; i++){
-                printf(" %c", ext_bytemaps->bmap_inodos[i]);
+                printf(" %u", ext_bytemaps->bmap_inodos[i]);
         }
         //Lo mismo que arriba pero con el bytemap de bloques.
-        printf("\nBloques:");
-        for(i=0; i < MAX_BLOQUES_PARTICION; i++){
-                printf(" %c", ext_bytemaps->bmap_bloques[i]);
+        printf("\nBloques [0-25] :");
+        for(i=0; i < 25; i++){
+                printf(" %u", ext_bytemaps->bmap_bloques[i]);
         }
         printf("\n");
+}
+
+int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BYTE_MAPS *ext_bytemaps, char *comando){
+	char dummy[LONGITUD_COMANDO];
+	char nombrenuevo[LONGITUD_COMANDO];
+	char nombreantiguo[LONGITUD_COMANDO];
+	sscanf(comando, "%s %s %s", dummy, nombreantiguo, nombrenuevo);
+
+	for(int i=1; i<MAX_FICHEROS; i++){
+                if(strcmp(directorio[i].dir_nfich, nombrenuevo) == 0){
+			if(ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] == 1)
+				return 0;
+		}
+	}
+
+	for(int i=1; i<MAX_FICHEROS; i++){
+		if(strcmp(directorio[i].dir_nfich, nombreantiguo) == 0){
+			if(ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] == 1){
+				strcpy(directorio[i].dir_nfich, nombrenuevo);
+					return 1;
+			}
+		}
+	}
+	return 0;
 }
