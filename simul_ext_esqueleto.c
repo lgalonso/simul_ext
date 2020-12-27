@@ -147,7 +147,6 @@ int ComprobarComando(char *strcomando){
         }
 }
 
-//REVIEW
 void LeeSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup){
    printf("Bloque %d Bytes\n", psup->s_block_size);
    printf("inodos particion = %d\n", psup->s_inodes_count);
@@ -157,12 +156,20 @@ void LeeSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup){
    printf("Primer bloque de datos = %d\n", psup->s_first_data_block);
 }
 
-//REVIEW
+//Muestra la información del directorio
 void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MAPS *ext_bytemaps){
    //Comienza en el 1 porque en el 0 está la entrada especial '.' que no necesitamos mostrar
    for(int i=1; i<MAX_FICHEROS; i++){
-      if(ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] == 1)
-         printf("%s \t tamanio: %d \t inodo: %d bloques: %d\n", directorio[i].dir_nfich, inodos->blq_inodos[directorio[i].dir_inodo].size_fichero, directorio[i].dir_inodo, *(inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque));
+      //Comprobamos que el inodo existe y está ocupado
+      if(ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] == 1){
+         printf("%s \t tamanio: %d \t inodo: %d bloques:", directorio[i].dir_nfich, inodos->blq_inodos[directorio[i].dir_inodo].size_fichero, directorio[i].dir_inodo);
+         for(int j=0; j<MAX_NUMS_BLOQUE_INODO; j++){
+            //Comprobamos que el bloque existe y está ocupado
+            if(ext_bytemaps->bmap_bloques[inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque[j]] == 1 )
+            printf(" %d", inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque[j]);
+         }  
+         printf("\n");   
+      }
    }
 }
 
