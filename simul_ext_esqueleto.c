@@ -147,12 +147,12 @@ int ComprobarComando(char *strcomando){
 
 //REVIEW
 void LeeSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup){
-   printf("Bloque %d Bytes\n", psup.s_block_size);
-   printf("inodos particion = %d\n", psup.s_inodes_count);
-   printf("inodos libres = %d\n", psup.s_free_inodes_count);
-   printf("Bloques particion = %d\n", psup.s_blocks_count);
-   printf("Bloques libres = %d\n", psup.s_free_blocks_count);
-   printf("Primer bloque de datos = %d\n", psup.s_first_data_block);
+   printf("Bloque %d Bytes\n", psup->s_block_size);
+   printf("inodos particion = %d\n", psup->s_inodes_count);
+   printf("inodos libres = %d\n", psup->s_free_inodes_count);
+   printf("Bloques particion = %d\n", psup->s_blocks_count);
+   printf("Bloques libres = %d\n", psup->s_free_blocks_count);
+   printf("Primer bloque de datos = %d\n", psup->s_first_data_block);
 }
 
 //REVIEW
@@ -160,7 +160,7 @@ void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos){
    //Comienza en el 1 porque en el 0 está la entrada especial '.' que no necesitamos mostrar
    for(int i=1; i<MAX_FICHEROS; i++){
       if(directorio[i].dir_nfich != "")
-         printf("%s /t tamanio: %d /t inodo: %d bloques: %d\n", directorio[i].dir_nfich, inodos.bql_inodos[directorio[i].dir_inodo].size_fichero, directorio[i].dir_inodo, inodos.bql_inodos[directorio[i].dir_inodo].i_nbloque);
+         printf("%s /t tamanio: %d /t inodo: %d bloques: %d\n", directorio[i].dir_nfich, inodos->blq_inodos[directorio[i].dir_inodo].size_fichero, directorio[i].dir_inodo, inodos->bql_inodos[directorio[i].dir_inodo].i_nbloque);
    }
 }
 
