@@ -75,10 +75,13 @@ int main()
 		case 0: //Salir
 		break;
 		case 1: //Info
+			LeeSuperBloque(&ext_superblock);
 		break;
 		case 2: //bytemaps
+			Printbytemaps(&ext_bytemaps);
 		break;
 		case 3: //dir
+			Directorio(directorio,&ext_blq_inodos);
 		break;
 		case 4: //rename
 		break;
@@ -160,7 +163,7 @@ void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos){
    //Comienza en el 1 porque en el 0 está la entrada especial '.' que no necesitamos mostrar
    for(int i=1; i<MAX_FICHEROS; i++){
       if(directorio[i].dir_nfich != "")
-         printf("%s /t tamanio: %d /t inodo: %d bloques: %d\n", directorio[i].dir_nfich, inodos->blq_inodos[directorio[i].dir_inodo].size_fichero, directorio[i].dir_inodo, inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque);
+         printf("%s /t tamanio: %d /t inodo: %d bloques: %d\n", directorio[i].dir_nfich, inodos->blq_inodos[directorio[i].dir_inodo].size_fichero, directorio[i].dir_inodo, *(inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque));
    }
 }
 
