@@ -147,6 +147,7 @@ int ComprobarComando(char *strcomando){
         }
 }
 
+//Imprime por pantalla la informacion del superbloque
 void LeeSuperBloque(EXT_SIMPLE_SUPERBLOCK *psup){
    printf("Bloque %d Bytes\n", psup->s_block_size);
    printf("inodos particion = %d\n", psup->s_inodes_count);
@@ -166,7 +167,7 @@ void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MA
          for(int j=0; j<MAX_NUMS_BLOQUE_INODO; j++){
             //Comprobamos que el bloque existe y está ocupado
             if(ext_bytemaps->bmap_bloques[inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque[j]] == 1 )
-            printf(" %d", inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque[j]);
+               printf(" %d", inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque[j]);
          }  
          printf("\n");   
       }
@@ -190,19 +191,25 @@ void Printbytemaps(EXT_BYTE_MAPS *ext_bytemaps){
         printf("\n");
 }
 
+//Rename de ficheros en un directorio dado un nombre existente de fichero y uno nuevo
 int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BYTE_MAPS *ext_bytemaps, char *comando){
 	char dummy[LONGITUD_COMANDO];
 	char nombrenuevo[LONGITUD_COMANDO];
 	char nombreantiguo[LONGITUD_COMANDO];
+   //Fragmentamos el comando en tres partes
 	sscanf(comando, "%s %s %s", dummy, nombreantiguo, nombrenuevo);
 
+   //Comprobacion de nombre nuevo
 	for(int i=1; i<MAX_FICHEROS; i++){
-                if(strcmp(directorio[i].dir_nfich, nombrenuevo) == 0){
-			if(ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] == 1)
+      if(strcmp(directorio[i].dir_nfich, nombrenuevo) == 0){
+			if(ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] == 1){
+            printf("ERROR: nombre de fichero en uso [%s]", nombrenuevo);
 				return 0;
+         }
 		}
 	}
 
+   //Comprobacion de nombre de fichero a renombrar
 	for(int i=1; i<MAX_FICHEROS; i++){
 		if(strcmp(directorio[i].dir_nfich, nombreantiguo) == 0){
 			if(ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] == 1){
@@ -211,5 +218,6 @@ int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BYTE_MAPS *ext_bytemaps, char *co
 			}
 		}
 	}
+   printf("ERROR: el fichero no existe [%s]", nombreantiguo);
 	return 0;
 }
