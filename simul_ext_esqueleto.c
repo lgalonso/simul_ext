@@ -163,7 +163,7 @@ void Directorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos){
    //Comienza en el 1 porque en el 0 está la entrada especial '.' que no necesitamos mostrar
    for(int i=1; i<MAX_FICHEROS; i++){
       if(directorio[i].dir_nfich != "")
-         printf("%s /t tamanio: %d /t inodo: %d bloques: %d\n", directorio[i].dir_nfich, inodos->blq_inodos[directorio[i].dir_inodo].size_fichero, directorio[i].dir_inodo, *(inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque));
+         printf("%s \t tamanio: %d \t inodo: %d bloques: %d\n", directorio[i].dir_nfich, inodos->blq_inodos[directorio[i].dir_inodo].size_fichero, directorio[i].dir_inodo, *(inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque));
    }
 }
 
