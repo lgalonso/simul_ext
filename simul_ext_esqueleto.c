@@ -17,7 +17,7 @@ int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
              EXT_DATOS *memdatos, char *nombre);
 int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
-           char *nombre,  FILE *fich);
+           char *comando);
 int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
            EXT_DATOS *memdatos, char *nombreorigen, char *nombredestino,  FILE *fich);
@@ -87,6 +87,7 @@ int main()
 		case 5: //imprimir
 		break;
 		case 6: //remove
+                        Borrar(directorio, &ext_blq_inodos, &ext_bytemaps, &ext_superblock, comando);
 		break;
 		case 7: //copy
 		break;
@@ -201,11 +202,11 @@ int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BYTE_MAPS *ext_bytemaps, char *co
 
    //Comprobacion de nombre nuevo
 	for(int i=1; i<MAX_FICHEROS; i++){
-      if(strcmp(directorio[i].dir_nfich, nombrenuevo) == 0){
+                if(strcmp(directorio[i].dir_nfich, nombrenuevo) == 0){
 			if(ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] == 1){
-            printf("ERROR: nombre de fichero en uso [%s]", nombrenuevo);
+                                printf("ERROR: nombre de fichero en uso [%s]", nombrenuevo);
 				return 0;
-         }
+                        }
 		}
 	}
 
@@ -220,4 +221,45 @@ int Renombrar(EXT_ENTRADA_DIR *directorio, EXT_BYTE_MAPS *ext_bytemaps, char *co
 	}
    printf("ERROR: el fichero no existe [%s]", nombreantiguo);
 	return 0;
+}
+
+
+int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock, char *comando){
+//int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock, char *nombre,  FILE *fich, char *comando){
+
+        char dummy[LONGITUD_COMANDO];
+	char nombre[LONGITUD_COMANDO];
+        //Fragmentamos el comando en dos partes
+	sscanf(comando, "%s %s", dummy, nombre);
+
+        //Comprobacion de nombre existente
+	for(int i=1; i<MAX_FICHEROS; i++){
+                if(strcmp(directorio[i].dir_nfich, nombre) == 0){
+			if(ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] == 1){
+                                //Marcar 7 punteros a bloque del inodo con 0xFFFF
+                                for(int j=0; j<MAX_NUMS_BLOQUE_INODO; j++){
+                                        //Comprobamos que el bloque existe y está ocupado
+                                        if(ext_bytemaps->bmap_bloques[inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque[j]] == 1 ){
+                                                //Ponemos a 0 el bloque del bytemap
+                                                ext_bytemaps->bmap_bloques[inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque[j]] = 0;
+                                                //Marcamos el puntero correspondiente del inodo con FFFFH
+                                                inodos->blq_inodos[directorio[i].dir_inodo].i_nbloque[j] = 0xFFFF;
+                                        }
+                                } 
+                                //Marcamos el inodo con 0
+                                ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] = 0;
+
+                                //Poner tamaño 0 en el inodo liberado
+                                inodos->blq_inodos[directorio[i].dir_inodo].size_fichero = 0;
+
+                                //Borrar entradas del directorio
+                                directorio[i].dir_nfich[LEN_NFICH] = *("");
+                                directorio[i].dir_inodo = 0xFFFF;
+
+				return 1;
+                        }
+		} 
+	}
+        printf("ERROR: fichero %s no encontrado\n", nombre);
+        return 0;
 }
