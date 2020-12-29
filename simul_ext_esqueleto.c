@@ -20,7 +20,7 @@ int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            char *comando);
 int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos,
            EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock,
-           EXT_DATOS *memdatos, char *nombreorigen, char *nombredestino,  FILE *fich);
+           EXT_DATOS *memdatos, FILE *fich, char *comando);
 void Grabarinodosydirectorio(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, FILE *fich);
 void GrabarByteMaps(EXT_BYTE_MAPS *ext_bytemaps, FILE *fich);
 void GrabarSuperBloque(EXT_SIMPLE_SUPERBLOCK *ext_superblock, FILE *fich);
@@ -65,6 +65,7 @@ int main()
      memcpy(&ext_blq_inodos,(EXT_BLQ_INODOS *)&datosfich[2], SIZE_BLOQUE);
      memcpy(&memdatos,(EXT_DATOS *)&datosfich[4],MAX_BLOQUES_DATOS*SIZE_BLOQUE);
 
+
      do{
 	printf("\n>> ");
 	fgets(comando, LONGITUD_COMANDO, stdin);
@@ -90,6 +91,7 @@ int main()
                         Borrar(directorio, &ext_blq_inodos, &ext_bytemaps, &ext_superblock, comando);
 		break;
 		case 7: //copy
+			Copiar(directorio, &ext_blq_inodos, &ext_bytemaps, &ext_superblock, memdatos, fent, comando);
 		break;
 		case 8: //ERROR
 			printf("ERROR: Comando ilegal [bytemaps,copy,dir,info,imprimir,rename,remove,salir]");
@@ -262,4 +264,89 @@ int Borrar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MAPS *e
 	}
         printf("ERROR: fichero %s no encontrado\n", nombre);
         return 0;
+}
+
+int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MAPS *ext_bytemaps, EXT_SIMPLE_SUPERBLOCK *ext_superblock, EXT_DATOS *memdatos, FILE *fich, char *comando){
+
+	char dummy[LONGITUD_COMANDO];
+        char nombrenuevo[LONGITUD_COMANDO];
+        char nombreantiguo[LONGITUD_COMANDO];
+	int pos_directorio=0;
+	int inodos_fich[MAX_INODOS];
+   //Fragmentamos el comando en tres partes
+        sscanf(comando, "%s %s %s", dummy, nombreantiguo, nombrenuevo);
+
+	//Comprobador de máximo de ficheros
+	int ficheros_actuales=0;
+        for(int i=1; i<MAX_FICHEROS; i++){
+                if(ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] == 1)
+                        ficheros_actuales++;
+        }
+        if(ficheros_actuales==MAX_FICHEROS){
+                printf("ERROR: maximo de ficheros alcanzado [%d]", ficheros_actuales);
+		return 0;
+	}
+
+	//Comprobrar que el nombre nuevo no exista y que el nombre antiguo si);
+	for(int i=1; i<MAX_FICHEROS; i++){
+                if(strcmp(directorio[i].dir_nfich, nombrenuevo) == 0){
+                        if(ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] == 1){
+                                printf("ERROR: nombre de fichero en uso [%s]", nombrenuevo);
+                                return 0;
+                        }
+                }
+		if(strcmp(directorio[i].dir_nfich, nombreantiguo) == 0){
+                        if(ext_bytemaps->bmap_inodos[directorio[i].dir_inodo] == 1){
+                                pos_directorio = i;
+                        }
+                }
+        }
+	if(pos_directorio==0){
+		printf("ERROR: el nombre del fichero a copiar no existe [%s]", nombreantiguo);
+		return 0;
+	}
+
+	//Sacamos los bloques que ocupa el fichero a copiar
+	int cantidad_bloques=0;
+	for(int j=0; j<MAX_NUMS_BLOQUE_INODO; j++){
+		//Comprobamos que el bloque existe y está ocupado
+		if(ext_bytemaps->bmap_bloques[inodos->blq_inodos[directorio[pos_directorio].dir_inodo].i_nbloque[j]] == 1 ){
+			inodos_fich[cantidad_bloques]=inodos->blq_inodos[directorio[pos_directorio].dir_inodo].i_nbloque[j];
+			//printf("%d ", inodos_fich[cantidad_bloques]);
+			cantidad_bloques++;
+		}
+	}
+	//Sacamos los bloques que va a ocupar el fichero nuevo
+	if(cantidad_bloques > ext_superblock->s_free_blocks_count){
+		printf("ERROR: el fichero a copiar es mayor que el tamanyo disponible [%d > %d]", cantidad_bloques, ext_superblock->s_free_blocks_count);
+		return 0;
+	} else {
+		ext_superblock->s_free_blocks_count = ext_superblock->s_free_blocks_count - cantidad_bloques;
+		ext_superblock->s_free_inodes_count--;
+	}
+
+	//montaje del nuevo fichero
+	ficheros_actuales++;
+	//Ocupación del inodo
+	for(int i=1; i<MAX_INODOS; i++){
+		if(ext_bytemaps->bmap_inodos[i]==0){
+			directorio[ficheros_actuales].dir_inodo = i;
+			strcpy(directorio[ficheros_actuales].dir_nfich, nombrenuevo);
+			ext_bytemaps->bmap_inodos[i]=1;
+			break;
+		}
+	}
+	for(int j=0; j<cantidad_bloques;j++){
+		for(int i=0; i<MAX_BLOQUES_PARTICION;i++){
+			if(ext_bytemaps->bmap_bloques[i]==0){
+				inodos->blq_inodos[directorio[ficheros_actuales].dir_inodo].i_nbloque[j] = i;
+				strcpy(memdatos[i].dato,memdatos[inodos_fich[j]].dato);
+				ext_bytemaps->bmap_bloques[i]=1;
+				break;
+			}
+		}
+	}
+	inodos->blq_inodos[directorio[ficheros_actuales].dir_inodo].size_fichero = inodos->blq_inodos[directorio[pos_directorio].dir_inodo].size_fichero;
+	printf("Archivo copiado con exito!");
+	return 1;
 }
