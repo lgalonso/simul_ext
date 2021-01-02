@@ -86,6 +86,7 @@ int main()
 			Renombrar(directorio, &ext_bytemaps, comando);
 		break;
 		case 5: //imprimir
+                        Imprimir(directorio, &ext_blq_inodos, memdatos, comando, ext_bytemaps);
 		break;
 		case 6: //remove
                         Borrar(directorio, &ext_blq_inodos, &ext_bytemaps, &ext_superblock, comando);
@@ -349,4 +350,35 @@ int Copiar(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_BYTE_MAPS *e
 	inodos->blq_inodos[directorio[ficheros_actuales].dir_inodo].size_fichero = inodos->blq_inodos[directorio[pos_directorio].dir_inodo].size_fichero;
 	printf("Archivo copiado con exito!");
 	return 1;
+}
+
+int Imprimir(EXT_ENTRADA_DIR *directorio, EXT_BLQ_INODOS *inodos, EXT_DATOS *memdatos, char *comando, EXT_BYTE_MAPS bytemaps){
+        char dummy[LONGITUD_COMANDO];
+	char nombre[LONGITUD_COMANDO];
+        //Fragmentamos el comando en dos partes
+	sscanf(comando, "%s %s", dummy, nombre);
+
+        int existe = 0;
+        //Comprobacion de nombre existente
+        for(int i=1; i<MAX_FICHEROS; i++){
+                if(strcmp(directorio[i].dir_nfich, nombre) == 0){
+                        if(bytemaps.bmap_inodos[directorio[i].dir_inodo] == 1){
+                                //Se marca la posición del inodo del fichero que existe
+			        existe = i;
+                        }
+		} 
+	}
+        //Si el bucle acaba y no hay matches, se sale de la función
+        if(existe == 0){
+                printf("ERROR: Fichero %s no encontrado.\n", nombre);
+                return 0;
+        }
+        //si se encuentra, se imprime los bloques en secuencia
+        for(int j = 0; j < MAX_NUMS_BLOQUE_INODO; j++){
+                //se comprueba que el bloque existe para evitar problemas con datos basura
+                if(bytemaps.bmap_bloques[inodos->blq_inodos[directorio[existe].dir_inodo].i_nbloque[j]] == 1){
+                        printf("%s", memdatos[inodos->blq_inodos[directorio[existe].dir_inodo].i_nbloque[j]].dato);
+                }
+        }
+        
 }
