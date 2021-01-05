@@ -102,7 +102,7 @@ int main()
                         memcpy((EXT_ENTRADA_DIR *)&datosfich[3],&directorio, SIZE_BLOQUE);
                         memcpy((EXT_BLQ_INODOS *)&datosfich[1],&ext_bytemaps, SIZE_BLOQUE);
                         memcpy((EXT_BLQ_INODOS *)&datosfich[2],&ext_blq_inodos, SIZE_BLOQUE);
-                        memcpy((EXT_DATOS *)&datosfich[4],&memdatos, SIZE_BLOQUE);
+                        memcpy((EXT_DATOS *)&datosfich[4],&memdatos, MAX_BLOQUES_DATOS*SIZE_BLOQUE);
                         rewind(fent);
 			for(i = 0; i<MAX_BLOQUES_PARTICION;i++){
                                 for(j = 0; j<SIZE_BLOQUE; j++){
