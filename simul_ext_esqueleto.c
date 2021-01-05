@@ -98,6 +98,18 @@ int main()
 		break;
 	}
     }while(f_comando!=0);
+			memcpy((EXT_SIMPLE_SUPERBLOCK *)&datosfich[0],&ext_superblock, SIZE_BLOQUE);
+                        memcpy((EXT_ENTRADA_DIR *)&datosfich[3],&directorio, SIZE_BLOQUE);
+                        memcpy((EXT_BLQ_INODOS *)&datosfich[1],&ext_bytemaps, SIZE_BLOQUE);
+                        memcpy((EXT_BLQ_INODOS *)&datosfich[2],&ext_blq_inodos, SIZE_BLOQUE);
+                        memcpy((EXT_DATOS *)&datosfich[4],&memdatos, SIZE_BLOQUE);
+                        rewind(fent);
+			for(i = 0; i<MAX_BLOQUES_PARTICION;i++){
+                                for(j = 0; j<SIZE_BLOQUE; j++){
+                                        fputc(datosfich[i].dato[j],fent);
+                                }
+
+    }
      // Buce de tratamiento de comandos
      //for (;;){
 //		 do {
